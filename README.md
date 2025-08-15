@@ -1,6 +1,6 @@
 # NLU FAQ Chatbot Server
 
-A high-performance, easy-to-use FAQ chatbot server built with **FastAPI** and **Sentence Transformers**. This server provides a simple API endpoint to find the most semantically relevant answer to a user's query from a predefined set of questions and answers.
+A high-performance, easy-to-use FAQ chatbot server built with **Flask** and **Sentence Transformers**. This server provides a simple API endpoint to find the most semantically relevant answer to a user's query from a predefined set of questions and answers.
 
 ![Python](https://img.shields.io/badge/Python-3.9+-blue?logo=python)
 ![Flask](https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=Flask&logoColor=white)

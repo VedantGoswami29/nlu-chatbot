@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <title>Voice Chatbot</title>
+    <title>GMIU Chatbot</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
         body {
@@ -14,9 +15,11 @@
             align-items: center;
             justify-content: center;
         }
+
         .chat-wrapper {
-            width: 400px;
-            height: 600px; /* fixed height */
+            width: 80%;
+            height: 90%;
+            /* fixed height */
             background: #fff;
             border-radius: 15px;
             overflow: hidden;
@@ -25,6 +28,7 @@
             flex-direction: column;
             border: 1px solid #ddd;
         }
+
         .chat-header {
             background: #5563DE;
             color: white;
@@ -35,6 +39,7 @@
             justify-content: space-between;
             align-items: center;
         }
+
         .mute-btn {
             background: rgba(255, 255, 255, 0.2);
             border: none;
@@ -44,39 +49,51 @@
             font-size: 14px;
             cursor: pointer;
         }
+
         .mute-btn:hover {
             background: rgba(255, 255, 255, 0.3);
         }
+
         .chat-box {
             flex: 1;
             padding: 15px;
             overflow-y: auto;
             background: #f7f8fa;
         }
+
         .chat-bubble {
-            max-width: 75%;
+            max-width: 50%;
             padding: 10px 15px;
             margin-bottom: 10px;
             border-radius: 18px;
             font-size: 14px;
             line-height: 1.4;
             animation: fadeIn 0.3s ease-in-out;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            display: table;
         }
+
         .user-bubble {
             background: #5563DE;
             color: white;
             margin-left: auto;
             border-bottom-right-radius: 5px;
+            text-align: right;
         }
+
         .bot-bubble {
             background: #e0e0e0;
             color: #333;
             margin-right: auto;
             border-bottom-left-radius: 5px;
+            text-align: left;
         }
+
         .typing {
             display: inline-block;
         }
+
         .typing span {
             background: #ccc;
             border-radius: 50%;
@@ -86,30 +103,47 @@
             width: 6px;
             animation: blink 1.4s infinite both;
         }
+
         .typing span:nth-child(2) {
             animation-delay: 0.2s;
         }
+
         .typing span:nth-child(3) {
             animation-delay: 0.4s;
         }
+
         @keyframes blink {
-            0%, 80%, 100% {
+
+            0%,
+            80%,
+            100% {
                 transform: scale(0.8);
                 opacity: 0.4;
             }
+
             40% {
                 transform: scale(1);
                 opacity: 1;
             }
         }
+
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
+
         .chat-input-container {
             display: flex;
             border-top: 1px solid #ddd;
         }
+
         .chat-input-container input {
             flex: 1;
             border: none;
@@ -118,6 +152,7 @@
             outline: none;
             font-family: 'Poppins', sans-serif;
         }
+
         .chat-input-container button {
             background: #5563DE;
             color: white;
@@ -127,16 +162,17 @@
             cursor: pointer;
             font-family: 'Poppins', sans-serif;
         }
+
         .chat-input-container button:hover {
             background: #3d4bbf;
         }
     </style>
 </head>
+
 <body>
     <div class="chat-wrapper">
         <div class="chat-header">
             GMIU Chatbot
-            <button class="mute-btn" id="mute-btn">🔊</button>
         </div>
         <div id="chat-box" class="chat-box">
             <div class="chat-bubble bot-bubble">Hi, I am Chatbot of GMIU. How can I help you?</div>
@@ -152,17 +188,10 @@
         const chatBox = document.getElementById("chat-box");
         const userInput = document.getElementById("user-input");
         const sendBtn = document.getElementById("send-btn");
-        const muteBtn = document.getElementById("mute-btn");
-
-        let isMuted = false;
 
         sendBtn.addEventListener("click", sendMessage);
         userInput.addEventListener("keypress", e => {
             if (e.key === "Enter") sendMessage();
-        });
-        muteBtn.addEventListener("click", () => {
-            isMuted = !isMuted;
-            muteBtn.textContent = isMuted ? "🔇" : "🔊";
         });
 
         function addMessage(text, sender) {
@@ -177,18 +206,11 @@
             const typing = document.createElement("div");
             typing.classList.add("chat-bubble", "bot-bubble");
             typing.innerHTML = `<div class="typing">
-                <span></span><span></span><span></span>
-            </div>`;
+            <span></span><span></span><span></span>
+        </div>`;
             chatBox.appendChild(typing);
             chatBox.scrollTop = chatBox.scrollHeight;
             return typing;
-        }
-
-        function speak(text) {
-            if (isMuted) return;
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = "en-US";
-            window.speechSynthesis.speak(utterance);
         }
 
         function sendMessage() {
@@ -205,20 +227,20 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ query: message })
             })
-            .then(res => res.json())
-            .then(data => {
-                typingIndicator.remove();
-                console.log(data)
-                const reply = data.answer || "Sorry, I didn't understand that.";
-                addMessage(reply, "bot");
-                speak(reply);
-            })
-            .catch(err => {
-                typingIndicator.remove();
-                addMessage("Error connecting to server.", "bot");
-                console.error(err);
-            });
+                .then(res => res.json())
+                .then(data => {
+                    typingIndicator.remove();
+                    console.log(data);
+                    const reply = data.answer || "Sorry, I didn't understand that.";
+                    addMessage(reply, "bot");
+                })
+                .catch(err => {
+                    typingIndicator.remove();
+                    addMessage("Error connecting to server.", "bot");
+                    console.error(err);
+                });
         }
     </script>
 </body>
+
 </html>
