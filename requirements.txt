@@ -1,5 +1,4 @@
-fastapi
+flask
 sentence-transformers
-uvicorn
 torch
 python-dotenv

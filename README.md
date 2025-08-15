@@ -3,7 +3,7 @@
 A high-performance, easy-to-use FAQ chatbot server built with **FastAPI** and **Sentence Transformers**. This server provides a simple API endpoint to find the most semantically relevant answer to a user's query from a predefined set of questions and answers.
 
 ![Python](https://img.shields.io/badge/Python-3.9+-blue?logo=python)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green?logo=fastapi)
+![Flask](https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=Flask&logoColor=white)
 ![Sentence Transformers](https://img.shields.io/badge/Sentence--Transformers-2.2+-orange)
 
 ## 🌟 Features
@@ -80,6 +80,6 @@ Keywords: refund, money back, return policy
 
 ### 6. Run the Server
 ``` bash
-uvicorn main:app --reload
+python main.py
 ```
 The server will be running at http://127.0.0.1:8000. On startup, it will load the model and process the FAQ files. You will see log messages indicating the progress.
