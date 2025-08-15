@@ -1,8 +1,7 @@
-from fastapi import FastAPI, HTTPException, Body
-from fastapi.middleware.cors import CORSMiddleware
+from flask import Flask, request, jsonify, render_template
+from flask_cors import CORS
 from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer, util
-from typing import List, Dict
 import os
 import re
 import torch
@@ -10,29 +9,16 @@ import torch
 # Load environment variables
 load_dotenv()
 
-app = FastAPI(
-    title="NLU Chatbot Server",
-    description="A FastAPI server using Sentence Transformers for FAQ matching.",
-    version="1.0.0",
-)
-
-# --- CORS ---
-origins = ["*"]
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 # --- GLOBALS ---
-faq_data: List[Dict] = []
+faq_data = []
 faq_embeddings = None
 model = None
 
 # --- PARSE .TXT FAQ FILES ---
-def parse_txt_data(text_data: str) -> List[Dict]:
+def parse_txt_data(text_data: str):
     faqs = []
     records = re.split(r'(^\s*Question ID:)', text_data, flags=re.IGNORECASE | re.MULTILINE)
     for i in range(1, len(records), 2):
@@ -70,16 +56,13 @@ def parse_txt_data(text_data: str) -> List[Dict]:
             faqs.append(faq_entry)
     return faqs
 
-# --- STARTUP ---
-@app.on_event("startup")
-async def startup_event():
+# --- LOAD DATA & MODEL ---
+def load_faq_and_model():
     global faq_data, faq_embeddings, model
 
-    # Get config from .env
     faq_directory = os.environ.get("FAQ_PATH", "faq_data")
     sentence_model_name = os.environ.get("SENTENCE_MODEL", "all-MiniLM-L6-v2")
 
-    # Optional: custom cache location
     cache_dir = os.environ.get("SENTENCE_TRANSFORMERS_HOME")
     if cache_dir:
         os.makedirs(cache_dir, exist_ok=True)
@@ -88,7 +71,6 @@ async def startup_event():
         print(f"--- WARNING: Directory '{faq_directory}' not found. ---")
         return
 
-    # Load all FAQ text files
     all_text_data = ""
     print(f"--- Loading data from '{faq_directory}'... ---")
     for filename in sorted(os.listdir(faq_directory)):
@@ -103,37 +85,38 @@ async def startup_event():
         print("--- WARNING: No data found in FAQ files. ---")
         return
 
-    # Parse FAQs
     faq_data = parse_txt_data(all_text_data)
     if not faq_data:
         print("--- WARNING: No valid FAQ entries parsed. ---")
         return
 
-    # Load model
     print(f"--- Loading Sentence Transformer model: {sentence_model_name} ---")
     model = SentenceTransformer(sentence_model_name)
 
-    # Encode questions
     questions = [item['question'] for item in faq_data]
     faq_embeddings = model.encode(questions, convert_to_tensor=True)
 
     print(f"--- Successfully loaded {len(faq_data)} Q&A pairs. ---")
 
-# --- ROOT ---
-@app.get("/")
-def read_root():
-    return {"status": "Chatbot server is running", "faqs_loaded": len(faq_data)}
+# --- ROUTES ---
+@app.route("/", methods=["GET"])
+def root():
+    return render_template('index.html')
 
-# --- ASK ---
-@app.post("/ask/")
-async def ask_question(query: str = Body(..., embed=True)):
+@app.route("/ask/", methods=["POST"])
+def ask_question():
     global faq_data, faq_embeddings, model
 
     if not faq_data or faq_embeddings is None:
-        raise HTTPException(status_code=503, detail="Server not ready.")
+        return jsonify({"error": "Server not ready."}), 503
 
-    if not query.strip():
-        raise HTTPException(status_code=400, detail="Query cannot be empty.")
+    data = request.get_json()
+    if not data or "query" not in data:
+        return jsonify({"error": "Missing 'query' field."}), 400
+
+    query = data["query"].strip()
+    if not query:
+        return jsonify({"error": "Query cannot be empty."}), 400
 
     query_embedding = model.encode(query, convert_to_tensor=True)
     cos_scores = util.cos_sim(query_embedding, faq_embeddings)[0]
@@ -142,14 +125,18 @@ async def ask_question(query: str = Body(..., embed=True)):
 
     SIMILARITY_THRESHOLD = 0.50
     if confidence > SIMILARITY_THRESHOLD:
-        return {
+        return jsonify({
             "answer": faq_data[best_match_index]['answer'],
             "matched_question": faq_data[best_match_index]['question'],
             "confidence": confidence
-        }
+        })
     else:
-        return {
+        return jsonify({
             "answer": "I am unable to answer that. Please contact us on: 7574949494 or 9099951160.",
             "matched_question": None,
             "confidence": confidence
-        }
+        })
+
+if __name__ == "__main__":
+    load_faq_and_model()
+    app.run(host="0.0.0.0", port=8000, debug=True)
