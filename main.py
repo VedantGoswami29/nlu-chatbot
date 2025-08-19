@@ -133,7 +133,7 @@ def ask_question():
     else:
         return jsonify({
             "answer": "I am unable to answer that. Please contact us on: 7574949494 or 9099951160.",
-            "matched_question": None,
+            "matched_question": faq_data[best_match_index]['question'],
             "confidence": confidence
         })
 

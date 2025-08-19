@@ -3,5 +3,6 @@
 .venv
 .env
 .cache
+.hf_cache
 __pycache__
 faqs/
